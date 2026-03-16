@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modül 8 — İklim Değişikliği: Verilerle Geleceği Oku</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif}
+body{background:#f8f6f0;display:flex;flex-direction:column}
+
+.header{background:#1c2e1c;padding:9px 24px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #4a8c4a}
+.badge{background:rgba(100,200,100,0.25);border:1px solid rgba(100,200,100,0.5);color:#86efac;font-size:10px;font-weight:600;letter-spacing:2px;padding:3px 10px;border-radius:3px}
+.header h1{font-size:16px;font-weight:600;color:#f0fff4;font-family:'DM Serif Display',serif}
+.score-disp{display:flex;align-items:center;gap:8px;color:#86efac;font-size:13px}
+.score-n{font-family:'DM Serif Display',serif;font-size:24px;color:#a3e635}
+
+.main{flex:1;display:grid;grid-template-columns:1fr 320px;gap:0;overflow:hidden;min-height:0}
+
+/* CHART AREA */
+.chart-area{padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;min-height:0}
+
+.period-tabs{display:flex;gap:6px;flex-shrink:0}
+.tab{background:white;border:2px solid #e0e0e0;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:#555;transition:all 0.2s}
+.tab:hover{border-color:#4a8c4a}
+.tab.active{background:#1c2e1c;border-color:#1c2e1c;color:white}
+
+.charts-grid{flex:1;display:grid;grid-template-rows:1fr 1fr;gap:10px;min-height:0}
+.chart-card{background:white;border-radius:14px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.cc-header{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cc-title{font-size:13px;font-weight:700;color:#1c2e1c;display:flex;align-items:center;gap:6px}
+.cc-trend{font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px}
+.trend-up{background:#fce4ec;color:#c62828}
+.trend-down{background:#e8f5e9;color:#2e7d32}
+.trend-stable{background:#e3f2fd;color:#1565c0}
+canvas.chart{flex:1;min-height:0}
+
+/* RIGHT PANEL */
+.right-panel{background:white;border-left:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden}
+
+.rp-section{padding:14px;border-bottom:1px solid #f0f0f0}
+.rp-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9e9e9e;margin-bottom:10px}
+
+/* Prediction game */
+.prediction-card{background:#f5f9f5;border:2px solid #c8e6c9;border-radius:12px;padding:14px}
+.pred-question{font-size:14px;font-weight:700;color:#1c2e1c;line-height:1.4;margin-bottom:12px}
+.pred-slider-wrap{margin-bottom:12px}
+.pred-label{font-size:12px;color:#546e7a;margin-bottom:6px;display:flex;justify-content:space-between}
+.pred-slider{width:100%;accent-color:#4a8c4a;height:6px}
+.pred-value{font-family:'DM Serif Display',serif;font-size:28px;font-weight:700;text-align:center;color:#1c2e1c;margin:8px 0}
+.pred-unit{font-size:14px;color:#78909c}
+.pred-btn{width:100%;background:#1c2e1c;color:#f0fff4;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;border:none;padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+.pred-btn:hover{background:#2e4a2e}
+
+.pred-result{background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:12px;display:none}
+.pr-verdict{font-size:16px;font-weight:800;margin-bottom:4px}
+.pr-text{font-size:12px;color:#37474f;line-height:1.5}
+
+/* Impact list */
+.impact-list{display:flex;flex-direction:column;gap:6px}
+.impact-item{display:flex;align-items:flex-start;gap:8px;padding:8px;background:#f5f5f5;border-radius:8px}
+.ii-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.ii-text{font-size:12px;color:#37474f;line-height:1.4}
+.ii-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:auto;flex-shrink:0}
+.ib-red{background:#fce4ec;color:#c62828}
+.ib-orange{background:#fff3e0;color:#e65100}
+.ib-green{background:#e8f5e9;color:#2e7d32}
+
+/* Action cards */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.action-card{background:#f9f9f9;border:2px solid transparent;border-radius:10px;padding:10px;cursor:pointer;transition:all 0.2s;text-align:center}
+.action-card:hover{border-color:#4a8c4a;background:#f1f8e9}
+.action-card.voted{border-color:#4caf50;background:#e8f5e9}
+.ac-icon{font-size:22px;margin-bottom:4px}
+.ac-label{font-size:11px;font-weight:700;color:#1c2e1c;line-height:1.3}
+.ac-effect{font-size:10px;color:#78909c;margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="badge">MODÜL 8</span>
+    <h1>🌍 İklim Değişikliği: Verilerle Geleceği Oku</h1>
+  </div>
+  <div class="score-disp">
+    <span>Tahmin Puanı:</span>
+    <span class="score-n" id="scoreN">0</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="chart-area">
+    <div class="period-tabs">
+      <button class="tab active" onclick="setEra(0,this)">1970-2000</button>
+      <button class="tab" onclick="setEra(1,this)">2000-2024</button>
+      <button class="tab" onclick="setEra(2,this)">2024-2050 (Tahmin)</button>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="cc-header">
+          <div class="cc-title">🌡️ Yıllık Ortalama Sıcaklık (°C) — Türkiye</div>
+          <div class="cc-trend trend-up" id="tempTrend">▲ +1.4°C / 50 yıl</div>
+        </div>
+        <canvas class="chart" id="tempChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="cc-header">
+          <div class="cc-title">🌧️ Yıllık Toplam Yağış (mm) — Türkiye</div>
+          <div class="cc-trend trend-down" id="rainTrend">▼ -8% / 50 yıl</div>
+        </div>
+        <canvas class="chart" id="rainChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="rp-section">
+      <div class="rp-title">🔮 Tahmin Yarışması</div>
+      <div class="prediction-card">
+        <div class="pred-question" id="predQ">2050 yılında Türkiye'nin yıllık ortalama sıcaklığı kaç derece olacak?</div>
+        <div class="pred-slider-wrap">
+          <div class="pred-label"><span>12°C</span><span>20°C</span></div>
+          <input type="range" class="pred-slider" id="predSlider" min="12" max="20" step="0.1" value="15" oninput="updatePredVal(this.value)">
+          <div class="pred-value"><span id="predVal">15.0</span><span class="pred-unit"> °C</span></div>
+        </div>
+        <button class="pred-btn" onclick="submitPrediction()">→ Tahminimi Onayla</button>
+        <div class="pred-result" id="predResult">
+          <div class="pr-verdict" id="prVerdict"></div>
+          <div class="pr-text" id="prText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-title">🌾 Tarıma Etkileri</div>
+      <div class="impact-list">
+        <div class="impact-item"><div class="ii-icon">🌡️</div><div class="ii-text">Sıcaklık arttıkça sulama ihtiyacı <strong>%30-50 artıyor</strong></div><div class="ii-badge ib-red">Kritik</div></div>
+        <div class="impact-item"><div class="ii-icon">🌧️</div><div class="ii-text">Yağış azalması kuru tarım <strong>verimsizleştiriyor</strong></div><div class="ii-badge ib-orange">Yüksek</div></div>
+        <div class="impact-item"><div class="ii-icon">❄️</div><div class="ii-text">Kış süresi kısalıyor → <strong>zararlı böcek popülasyonu artıyor</strong></div><div class="ii-badge ib-orange">Orta</div></div>
+        <div class="impact-item"><div class="ii-icon">🌾</div><div class="ii-text">Akdeniz bölgesinde turunçgil <strong>kuzeye kayıyor</strong></div><div class="ii-badge ib-green">İzle</div></div>
+      </div>
+    </div>
+
+    <div class="rp-section" style="flex:1;overflow-y:auto">
+      <div class="rp-title">✅ Çiftçi Ne Yapmalı?</div>
+      <div class="action-grid" id="actionGrid">
+        <div class="action-card" onclick="vote(this)"><div class="ac-icon">💧</div><div class="ac-label">Damla Sulama Kur</div><div class="ac-effect">Su tasarrufu %50</div></div>
+        <div class="action-card" onclick="vote(this)"><div class="ac-icon">🌱</div><div class="ac-label">Kuraklık Toleranslı Çeşit</div><div class="ac-effect">Verim kaybı azalır</div></div>
+        <div class="action-card" onclick="vote(this)"><div class="ac-icon">🌳</div><div class="ac-label">Rüzgar Kıranı</div><div class="ac-effect">Buharlaşma -20%</div></div>
+        <div class="action-card" onclick="vote(this)"><div class="ac-icon">☁️</div><div class="ac-label">Yağmur Suyu Topla</div><div class="ac-effect">+Yedek su rezervi</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let totalScore=0;
+let predAnswered=false;
+let currentEra=0;
+
+const eras=[
+  {label:'1970-2000',years:Array.from({length:31},(_,i)=>1970+i),
+   tempBase:13.2,tempSlope:0.018,tempNoise:0.5,
+   rainBase:640,rainSlope:-0.8,rainNoise:40,
+   tempTrend:'▲ +0.5°C / 30 yıl',rainTrend:'▼ -2% / 30 yıl',},
+  {label:'2000-2024',years:Array.from({length:25},(_,i)=>2000+i),
+   tempBase:14.0,tempSlope:0.06,tempNoise:0.4,
+   rainBase:615,rainSlope:-1.8,rainNoise:45,
+   tempTrend:'▲ +1.4°C / 24 yıl',rainTrend:'▼ -8% / 24 yıl',},
+  {label:'2024-2050',years:Array.from({length:27},(_,i)=>2024+i),
+   tempBase:15.5,tempSlope:0.10,tempNoise:0.3,
+   rainBase:590,rainSlope:-3.0,rainNoise:30,
+   tempTrend:'▲ Projeksiyon',rainTrend:'▼ Projeksiyon',isPrediction:true},
+];
+
+const tempCtx=document.getElementById('tempChart').getContext('2d');
+const rainCtx=document.getElementById('rainChart').getContext('2d');
+
+function genData(base,slope,noise,years){
+  return years.map((y,i)=>+(base+slope*i+(Math.random()-0.5)*noise).toFixed(2));
+}
+
+function drawLineChart(ctx,labels,data,color,projection=false){
+  const w=ctx.canvas.offsetWidth||ctx.canvas.parentElement.clientWidth;
+  const h=ctx.canvas.offsetHeight||ctx.canvas.parentElement.clientHeight;
+  ctx.canvas.width=w; ctx.canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  if(!data.length) return;
+  const pad={t:10,r:10,b:28,l:44};
+  const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+  const min=Math.min(...data)*0.98, max=Math.max(...data)*1.02;
+  const range=max-min;
+
+  // Grid
+  ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ch*(1-i/4);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
+    ctx.fillStyle='#9e9e9e';ctx.font='9px DM Sans';ctx.textAlign='right';
+    ctx.fillText((min+range*i/4).toFixed(0),pad.l-4,y+3);
+  }
+  // X labels
+  ctx.fillStyle='#9e9e9e';ctx.font='9px DM Sans';ctx.textAlign='center';
+  [0,Math.floor(data.length/3),Math.floor(2*data.length/3),data.length-1].forEach(i=>{
+    const x=pad.l+cw*i/(data.length-1);
+    ctx.fillText(labels[i],x,h-8);
+  });
+
+  // Line
+  if(projection){ctx.setLineDash([6,3]);}
+  ctx.strokeStyle=color; ctx.lineWidth=2.5;
+  ctx.shadowColor=color+'88'; ctx.shadowBlur=6;
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad.l+cw*i/(data.length-1);
+    const y=pad.t+ch*(1-(v-min)/range);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke(); ctx.setLineDash([]);ctx.shadowBlur=0;
+
+  // Fill
+  ctx.globalAlpha=0.1; ctx.fillStyle=color;
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad.l+cw*i/(data.length-1);
+    const y=pad.t+ch*(1-(v-min)/range);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  const lastX=pad.l+cw; const firstX=pad.l;
+  ctx.lineTo(lastX,pad.t+ch); ctx.lineTo(firstX,pad.t+ch); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Trend line
+  const avg=data.reduce((a,b)=>a+b)/data.length;
+  const firstY=pad.t+ch*(1-(data[0]-min)/range);
+  const lastY=pad.t+ch*(1-(data[data.length-1]-min)/range);
+  ctx.strokeStyle=color+'aa'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l,firstY); ctx.lineTo(pad.l+cw,lastY); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function setEra(idx,btn){
+  currentEra=idx;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const era=eras[idx];
+  const tempData=genData(era.tempBase,era.tempSlope,era.tempNoise,era.years);
+  const rainData=genData(era.rainBase,era.rainSlope,era.rainNoise,era.years);
+  const labels=era.years.map(y=>y.toString());
+  const proj=era.isPrediction||false;
+  drawLineChart(tempCtx,labels,tempData,'#ef5350',proj);
+  drawLineChart(rainCtx,labels,rainData,'#42a5f5',proj);
+  document.getElementById('tempTrend').textContent=era.tempTrend;
+  document.getElementById('rainTrend').textContent=era.rainTrend;
+}
+
+function updatePredVal(v){
+  document.getElementById('predVal').textContent=parseFloat(v).toFixed(1);
+}
+
+const predictions=[
+  {answer:17.8,unit:'°C',range:0.8,
+   q:'2050\'de Türkiye sıcaklık tahmini? (Bilim: +2.3°C olası)',
+   onClose:`IPCC 2023: RCP4.5 senaryosunda Türkiye'de 2050'ye kadar +1.5 ile +2.5°C artış öngörülüyor.`
+  },
+];
+
+let predIdx=0;
+
+function submitPrediction(){
+  if(predAnswered) return;
+  const val=parseFloat(document.getElementById('predSlider').value);
+  const p=predictions[predIdx];
+  const diff=Math.abs(val-p.answer);
+  const pts=diff<=p.range?100:diff<=p.range*2?60:diff<=p.range*3?30:0;
+  totalScore+=pts;
+  document.getElementById('scoreN').textContent=totalScore;
+  predAnswered=true;
+
+  const res=document.getElementById('predResult');
+  res.style.display='block';
+  document.getElementById('prVerdict').textContent=pts>=80?`🎯 Mükemmel! (${val}°C — Gerçek: ${p.answer}°C)`:pts>=50?`📍 Yakın! (${val}°C — Gerçek: ${p.answer}°C)`:`📚 Uzak. (${val}°C — Gerçek: ${p.answer}°C)`;
+  document.getElementById('prVerdict').style.color=pts>=80?'#2e7d32':pts>=50?'#e65100':'#c62828';
+  document.getElementById('prText').textContent=p.onClose;
+}
+
+let voteCount=0;
+function vote(el){
+  if(!el.classList.contains('voted')){
+    el.classList.add('voted');
+    voteCount++;
+    totalScore+=20;
+    document.getElementById('scoreN').textContent=totalScore;
+  }
+}
+
+// Init
+setEra(0,document.querySelector('.tab.active'));
+window.addEventListener('resize',()=>{ const era=eras[currentEra]; setEra(currentEra,document.querySelectorAll('.tab')[currentEra]); });
+</script>
+</body>
+</html>
